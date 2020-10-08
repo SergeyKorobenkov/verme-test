@@ -1,3 +1,0 @@
-done        pytest orgunits/tests/models/ 
-done        pytest orgunits/tests/views/
-done        pytest orgunits/tests/optimization/
