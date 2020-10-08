@@ -4,6 +4,7 @@ Copyright 2020 ООО «Верме»
 
 from django.db import models
 from django.db.models.expressions import RawSQL
+from django.db.models import Q
 
 
 class OrganizationQuerySet(models.QuerySet):
@@ -14,7 +15,8 @@ class OrganizationQuerySet(models.QuerySet):
 
         :type root_org_id: int
         """
-        return self.filter()
+
+        return self.filter(Q(id=root_org_id) | Q(parent__id=root_org_id) | Q(parent__in=self))
 
     def tree_upwards(self, child_org_id):
         """
@@ -23,7 +25,7 @@ class OrganizationQuerySet(models.QuerySet):
 
         :type child_org_id: int
         """
-        return self.filter()
+        return self.filter(Q(id=child_org_id) | Q(id__in=self.values('parent_id')))
 
 
 class Organization(models.Model):
@@ -49,6 +51,7 @@ class Organization(models.Model):
 
         :rtype: django.db.models.QuerySet
         """
+        return type(self).objects.tree_upwards(self.id).exclude(name=self.name)
 
     def children(self):
         """
@@ -57,3 +60,7 @@ class Organization(models.Model):
 
         :rtype: django.db.models.QuerySet
         """
+        return type(self).objects.tree_downwards(self.id).exclude(id=self.id)
+
+    def __str__(self):
+       return self.name

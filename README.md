@@ -9,7 +9,7 @@
 ## Запуск тестов
 ```
 pytest orgunits/tests/models/
-pytest orgunits/tests/api/
+pytest orgunits/tests/views/
 pytest orgunits/tests/optimization/
 ```
 
