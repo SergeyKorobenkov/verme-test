@@ -11,21 +11,34 @@ class OrganizationQuerySet(models.QuerySet):
     def tree_downwards(self, root_org_id):
         """
         Возвращает корневую организацию с запрашиваемым root_org_id и всех её детей любого уровня вложенности
-        TODO: Написать фильтр с помощью ORM или RawSQL запроса или функций Python
+        Метод запрашивает все объекты базы и на основе root_org_id выстраивает дерево зависимостей, собирая id 
+        всех потомков искомого объекта в списке children_id.
 
         :type root_org_id: int
         """
-
-        return self.filter(Q(id=root_org_id) | Q(parent__id=root_org_id) | Q(parent__in=self))
+        values_vault = list(self.all().values('id', 'parent_id').order_by('id'))
+        children_id = [root_org_id, ]
+        for item in values_vault:
+            if item['parent_id'] in children_id:
+                children_id.append(item['id'])
+        values_vault.clear() # очищаем первичный список что бы не засорять память
+        return self.filter(id__in=children_id)
 
     def tree_upwards(self, child_org_id):
         """
         Возвращает корневую организацию с запрашиваемым child_org_id и всех её родителей любого уровня вложенности
-        TODO: Написать фильтр с помощью ORM или RawSQL запроса или функций Python
+        Метод запрашивает все объекты базы и на основе child_org_id выстраивает дерево зависимостей, собирая id 
+        всех родителей искомого объекта в списке parents_id
 
         :type child_org_id: int
         """
-        return self.filter(Q(id=child_org_id) | Q(id__in=self.values('parent_id')))
+        values_vault = list(self.all().values('id', 'parent_id').order_by('-id'))
+        parents_id = [child_org_id, ]
+        for item in values_vault:
+            if item['id'] in parents_id:
+                parents_id.append(item['parent_id'])
+        values_vault.clear() # очищаем первичный список что бы не засорять память
+        return self.filter(id__in=parents_id)
 
 
 class Organization(models.Model):
@@ -47,16 +60,14 @@ class Organization(models.Model):
     def parents(self):
         """
         Возвращает всех родителей любого уровня вложенности
-        TODO: Написать метод, используя ORM и .tree_upwards()
 
         :rtype: django.db.models.QuerySet
         """
-        return type(self).objects.tree_upwards(self.id).exclude(name=self.name)
+        return type(self).objects.tree_upwards(self.id).exclude(id=self.id)
 
     def children(self):
         """
         Возвращает всех детей любого уровня вложенности
-        TODO: Написать метод, используя ORM и .tree_downwards()
 
         :rtype: django.db.models.QuerySet
         """

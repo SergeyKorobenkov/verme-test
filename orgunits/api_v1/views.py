@@ -20,15 +20,11 @@ class OrganizationViewSet(TokenAuthMixin, ModelViewSet):
         """
         Возвращает родителей запрашиваемой организации
         """
-        x = request.path
-        y = x.split('/') # небольшой костыль для фильтрации. Получаем id и пляшем от него
-        return Response(self.queryset.filter(id=int(y[4])).first().parents().values('code', 'id', 'name', 'parent'))
+        return Response(self.queryset.filter(id=kwargs['pk']).first().parents().values('code', 'id', 'name', 'parent'))
 
     @action(methods=["GET"], detail=True)
     def children(self, request, *args, **kwargs):
         """
         Возвращает детей запрашиваемой организации
         """
-        x = request.path
-        y = x.split('/') # небольшой костыль для фильтрации. Получаем id и пляшем от него
-        return Response(self.queryset.filter(id=int(y[4])).first().children().values('code', 'id', 'name', 'parent'))
+        return Response(self.queryset.filter(id=kwargs['pk']).first().children().values('code', 'id', 'name', 'parent'))
