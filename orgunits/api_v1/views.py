@@ -20,11 +20,17 @@ class OrganizationViewSet(TokenAuthMixin, ModelViewSet):
         """
         Возвращает родителей запрашиваемой организации
         """
-        return Response(self.queryset.filter(id=kwargs['pk']).first().parents().values('code', 'id', 'name', 'parent'))
+        serializer = self.get_serializer(
+            self.get_object().parents(), many=True
+        )
+        return Response(serializer.data)
 
     @action(methods=["GET"], detail=True)
     def children(self, request, *args, **kwargs):
         """
         Возвращает детей запрашиваемой организации
         """
-        return Response(self.queryset.filter(id=kwargs['pk']).first().children().values('code', 'id', 'name', 'parent'))
+        serializer = self.get_serializer(
+            self.get_object().children(), many=True
+        )
+        return Response(serializer.data)
